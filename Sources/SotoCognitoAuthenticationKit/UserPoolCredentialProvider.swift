@@ -61,7 +61,7 @@ extension IdentityProviderFactory {
         userPoolId: String,
         clientId: String,
         clientSecret: String? = nil,
-        respondToChallenge: ((CognitoChallengeName, [String: String]?, Error?, EventLoop) -> EventLoopFuture<[String: String]?>)? = nil,
+        respondToChallenge: ((CognitoChallengeName, [String: String]?, Error?, EventLoop, String?) -> EventLoopFuture<[String: String]?>)? = nil,
         maxChallengeResponseAttempts: Int = 4
     ) -> Self {
         var currentAuthentication = authentication
@@ -95,7 +95,7 @@ extension IdentityProviderFactory {
                     tokenPromise.fail(SotoCognitoError.unauthorized(reason: "Failed to produce valid response to challenge \(challengeName)"))
                     return
                 }
-                respondToChallenge(challengeId, challenge.parameters, error, context.eventLoop)
+              respondToChallenge(challengeId, challenge.parameters, error, context.eventLoop, challenge.session)
                     .flatMap { parameters in
                         // if nil parameters is sent then throw did not respond error
                         guard let parameters = parameters else {
@@ -192,7 +192,7 @@ extension CredentialProviderFactory {
         clientSecret: String? = nil,
         identityPoolId: String,
         region: Region,
-        respondToChallenge: ((CognitoChallengeName, [String: String]?, Error?, EventLoop) -> EventLoopFuture<[String: String]?>)? = nil,
+        respondToChallenge: ((CognitoChallengeName, [String: String]?, Error?, EventLoop, String?) -> EventLoopFuture<[String: String]?>)? = nil,
         maxChallengeResponseAttempts: Int = 4,
         logger: Logger = AWSClient.loggingDisabled
     ) -> CredentialProviderFactory {
