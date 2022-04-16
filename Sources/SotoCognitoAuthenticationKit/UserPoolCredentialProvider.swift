@@ -101,7 +101,8 @@ extension IdentityProviderFactory {
                         guard let parameters = parameters else {
                             return context.eventLoop.makeFailedFuture(SotoCognitoError.unauthorized(reason: "Did not respond to challenge \(challengeName)"))
                         }
-                        return authenticatable.respondToChallenge(username: currentUserName, name: challengeId, responses: parameters, session: challenge.session)
+                        let session = parameters["SESSION"] ?? challenge.session
+                        return authenticatable.respondToChallenge(username: currentUserName, name: challengeId, responses: parameters, session: session)
                     }
                     .whenComplete { (result: Result<CognitoAuthenticateResponse, Error>) -> Void in
                         challengeResponseAttempts += 1
