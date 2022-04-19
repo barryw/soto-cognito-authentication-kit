@@ -16,53 +16,56 @@ import JWTKit
 
 /// JWT Access token
 struct AccessTokenVerifier: JWTPayload {
-    let expirationTime: Date
-    let issuer: String
-    let tokenUse: String
+  let expirationTime: Date
+  let issuer: String
+  let tokenUse: String
+  let groups: [String]
 
-    func verify(using signer: JWTSigner) throws {
-        guard self.expirationTime > Date() else { throw SotoCognitoError.unauthorized(reason: "token expired") }
-        guard self.tokenUse == "access" else { throw SotoCognitoError.unauthorized(reason: "invalid token") }
-    }
+  func verify(using signer: JWTSigner) throws {
+    debugPrint("Groups \(groups)")
+    guard self.expirationTime > Date() else { throw SotoCognitoError.unauthorized(reason: "token expired") }
+    guard self.tokenUse == "access" else { throw SotoCognitoError.unauthorized(reason: "invalid token") }
+  }
 
-    private enum CodingKeys: String, CodingKey {
-        case expirationTime = "exp"
-        case issuer = "iss"
-        case tokenUse = "token_use"
-    }
+  private enum CodingKeys: String, CodingKey {
+    case expirationTime = "exp"
+    case issuer = "iss"
+    case tokenUse = "token_use"
+    case groups = "cognito:groups"
+  }
 }
 
 /// JWT Id token
 struct IdTokenVerifier: JWTPayload {
-    let audience: String
-    let expirationTime: Date
-    let issuer: String
-    let tokenUse: String
+  let audience: String
+  let expirationTime: Date
+  let issuer: String
+  let tokenUse: String
 
-    func verify(using signer: JWTSigner) throws {
-        guard self.expirationTime > Date() else { throw SotoCognitoError.unauthorized(reason: "token expired") }
-        guard self.tokenUse == "id" else { throw SotoCognitoError.unauthorized(reason: "invalid token") }
-    }
+  func verify(using signer: JWTSigner) throws {
+    guard self.expirationTime > Date() else { throw SotoCognitoError.unauthorized(reason: "token expired") }
+    guard self.tokenUse == "id" else { throw SotoCognitoError.unauthorized(reason: "invalid token") }
+  }
 
-    private enum CodingKeys: String, CodingKey {
-        case audience = "aud"
-        case expirationTime = "exp"
-        case issuer = "iss"
-        case tokenUse = "token_use"
-    }
+  private enum CodingKeys: String, CodingKey {
+    case audience = "aud"
+    case expirationTime = "exp"
+    case issuer = "iss"
+    case tokenUse = "token_use"
+  }
 }
 
 /// JWT payload that encapsulates both a verified token and an output payload
 struct VerifiedToken<Token: JWTPayload, Payload: Codable>: JWTPayload {
-    let token: Token
-    let payload: Payload
+  let token: Token
+  let payload: Payload
 
-    init(from decoder: Decoder) throws {
-        self.token = try Token(from: decoder)
-        self.payload = try Payload(from: decoder)
-    }
+  init(from decoder: Decoder) throws {
+    self.token = try Token(from: decoder)
+    self.payload = try Payload(from: decoder)
+  }
 
-    func verify(using signer: JWTSigner) throws {
-        try self.token.verify(using: signer)
-    }
+  func verify(using signer: JWTSigner) throws {
+    try self.token.verify(using: signer)
+  }
 }
