@@ -128,6 +128,7 @@ extension IdentityProviderFactory {
                   switch result {
                   case .success(let response):
                     cognitoGroups = response.groups
+                    debugPrint("SETTING GROUPS TO \(cognitoGroups)")
                     currentUserName = response.username
                     tokenPromise.succeed(idToken)
                   case .failure(let error):
