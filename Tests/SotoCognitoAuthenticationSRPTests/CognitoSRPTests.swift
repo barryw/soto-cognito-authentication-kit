@@ -286,7 +286,7 @@ final class CognitoSRPTests: XCTestCase {
                 clientId: Self.clientId,
                 identityPoolId: Self.identityPoolId,
                 region: Self.region,
-                respondToChallenge: { challenge, _, _, eventLoop, session, groups in
+                respondToChallenge: { challenge, _, _, eventLoop, session in
                     switch challenge {
                     case .newPasswordRequired:
                         return eventLoop.makeSucceededFuture(["NEW_PASSWORD": "NewPassword123!"])

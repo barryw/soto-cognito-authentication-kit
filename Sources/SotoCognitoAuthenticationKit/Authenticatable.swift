@@ -320,7 +320,6 @@ public class CognitoAuthenticatable {
     name: CognitoChallengeName,
     responses: [String: String],
     session: String?,
-    groups: [String]? = nil,
     clientMetadata: [String: String]? = nil,
     context: CognitoContextData? = nil,
     on eventLoop: EventLoop? = nil

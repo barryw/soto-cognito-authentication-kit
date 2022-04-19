@@ -61,13 +61,15 @@ extension IdentityProviderFactory {
     userPoolId: String,
     clientId: String,
     clientSecret: String? = nil,
-    respondToChallenge: ((CognitoChallengeName, [String: String]?, Error?, EventLoop, String?, [String]?) -> EventLoopFuture<[String: String]?>)? = nil,
-    maxChallengeResponseAttempts: Int = 4
+    respondToChallenge: ((CognitoChallengeName, [String: String]?, Error?, EventLoop, String?) -> EventLoopFuture<[String: String]?>)? = nil,
+    maxChallengeResponseAttempts: Int = 4,
+    groupsSet: (([String]?) -> Void)? = nil
   ) -> Self {
     var currentAuthentication = authentication
     var currentUserName = userName
     var challengeResponseAttempts = 0
     var cognitoGroups = [String]()
+
     return externalIdentityProvider { context in
       let userPoolIdentityProvider = "cognito-idp.\(context.region).amazonaws.com/\(userPoolId)"
       let cognitoIdentityProvider = CognitoIdentityProvider(client: context.client, region: context.region)
@@ -96,14 +98,14 @@ extension IdentityProviderFactory {
           tokenPromise.fail(SotoCognitoError.unauthorized(reason: "Failed to produce valid response to challenge \(challengeName)"))
           return
         }
-        respondToChallenge(challengeId, challenge.parameters, error, context.eventLoop, challenge.session, cognitoGroups)
+        respondToChallenge(challengeId, challenge.parameters, error, context.eventLoop, challenge.session)
           .flatMap { parameters in
             // if nil parameters is sent then throw did not respond error
             guard let parameters = parameters else {
               return context.eventLoop.makeFailedFuture(SotoCognitoError.unauthorized(reason: "Did not respond to challenge \(challengeName)"))
             }
             let session = parameters["SESSION"] ?? challenge.session
-            return authenticatable.respondToChallenge(username: currentUserName, name: challengeId, responses: parameters, session: session, groups: cognitoGroups)
+            return authenticatable.respondToChallenge(username: currentUserName, name: challengeId, responses: parameters, session: session)
           }
           .whenComplete { (result: Result<CognitoAuthenticateResponse, Error>) -> Void in
             challengeResponseAttempts += 1
@@ -128,9 +130,9 @@ extension IdentityProviderFactory {
                   switch result {
                   case .success(let response):
                     cognitoGroups = response.groups
-                    debugPrint("SETTING GROUPS TO \(cognitoGroups)")
                     currentUserName = response.username
                     tokenPromise.succeed(idToken)
+                    groupsSet?(cognitoGroups)
                   case .failure(let error):
                     tokenPromise.fail(error)
                   }
@@ -196,7 +198,7 @@ extension CredentialProviderFactory {
     clientSecret: String? = nil,
     identityPoolId: String,
     region: Region,
-    respondToChallenge: ((CognitoChallengeName, [String: String]?, Error?, EventLoop, String?, [String]?) -> EventLoopFuture<[String: String]?>)? = nil,
+    respondToChallenge: ((CognitoChallengeName, [String: String]?, Error?, EventLoop, String?) -> EventLoopFuture<[String: String]?>)? = nil,
     maxChallengeResponseAttempts: Int = 4,
     logger: Logger = AWSClient.loggingDisabled
   ) -> CredentialProviderFactory {
