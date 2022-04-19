@@ -200,6 +200,7 @@ extension CredentialProviderFactory {
     region: Region,
     respondToChallenge: ((CognitoChallengeName, [String: String]?, Error?, EventLoop, String?) -> EventLoopFuture<[String: String]?>)? = nil,
     maxChallengeResponseAttempts: Int = 4,
+    groupsSet: (([String]?) -> Void)? = nil,
     logger: Logger = AWSClient.loggingDisabled
   ) -> CredentialProviderFactory {
     let identityProvider = IdentityProviderFactory.cognitoUserPool(
@@ -209,7 +210,8 @@ extension CredentialProviderFactory {
       clientId: clientId,
       clientSecret: clientSecret,
       respondToChallenge: respondToChallenge,
-      maxChallengeResponseAttempts: maxChallengeResponseAttempts
+      maxChallengeResponseAttempts: maxChallengeResponseAttempts,
+      groupsSet: groupsSet
     )
     return .cognitoIdentity(
       identityPoolId: identityPoolId,
