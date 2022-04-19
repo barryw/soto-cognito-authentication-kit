@@ -19,10 +19,8 @@ struct AccessTokenVerifier: JWTPayload {
   let expirationTime: Date
   let issuer: String
   let tokenUse: String
-  let groups: [String]
 
   func verify(using signer: JWTSigner) throws {
-    debugPrint("Groups \(groups)")
     guard self.expirationTime > Date() else { throw SotoCognitoError.unauthorized(reason: "token expired") }
     guard self.tokenUse == "access" else { throw SotoCognitoError.unauthorized(reason: "invalid token") }
   }
@@ -31,7 +29,6 @@ struct AccessTokenVerifier: JWTPayload {
     case expirationTime = "exp"
     case issuer = "iss"
     case tokenUse = "token_use"
-    case groups = "cognito:groups"
   }
 }
 

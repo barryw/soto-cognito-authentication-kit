@@ -512,7 +512,7 @@ final class CognitoTests: XCTestCase {
                 clientSecret: Self.clientSecret,
                 identityPoolId: Self.identityPoolId,
                 region: Self.region,
-                respondToChallenge: { challenge, _, error, eventLoop, session in
+                respondToChallenge: { challenge, _, error, eventLoop, session, groups in
                     switch challenge {
                     case .newPasswordRequired:
                         if error == nil {
